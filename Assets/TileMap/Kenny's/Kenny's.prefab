@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7665185697059179826}
   - component: {fileID: 7705097746353668937}
   m_Layer: 0
-  m_Name: New Tile Palette
+  m_Name: Kenny's
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
