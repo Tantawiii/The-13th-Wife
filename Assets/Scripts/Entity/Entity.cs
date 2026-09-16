@@ -13,8 +13,14 @@ public class Entity : MonoBehaviour
     [Header("Collision Detection")]
     [SerializeField] private Transform groundCheck;
     [SerializeField] private float groundCheckDistance = 0.1f;
+    [SerializeField] private Transform wallCheck;
+    [SerializeField] private float wallCheckDistance = 0.2f;
     [SerializeField] private LayerMask whatIsGround;
+    [SerializeField] private float coyoteTime = 0.1f;
     public bool groundDetected { get; private set; }
+    public bool wallDetected { get; private set; }
+
+    private float lastGroundedTime = -999f;
 
     protected virtual void Awake()
     {
@@ -37,6 +43,11 @@ public class Entity : MonoBehaviour
     public void CurrentStateAnimationTrigger()
     {
         stateMachine.currentState.AnimationTrigger();
+    }
+
+    public virtual void PerformAttack()
+    {
+
     }
 
     public void SetVelocity(float xVelocity, float yVelocity)
@@ -63,7 +74,16 @@ public class Entity : MonoBehaviour
     private void HandleCollisionDetection()
     {
         groundDetected = Physics2D.Raycast(groundCheck.position, Vector2.down, groundCheckDistance, whatIsGround);
+
+        if (groundDetected)
+            lastGroundedTime = Time.time;
+
+        wallDetected = wallCheck != null && Physics2D.Raycast(wallCheck.position, Vector2.right * facingDir, wallCheckDistance, whatIsGround);
     }
+
+    // Absorbs a single missed ground-raycast frame (physics resting jitter) so a
+    // grounded state doesn't get bounced into an airborne one by a one-frame flicker.
+    public bool HasCoyoteGrounding() => Time.time - lastGroundedTime <= coyoteTime;
 
     public LayerMask GetWhatIsGround() => whatIsGround;
 
@@ -74,5 +94,11 @@ public class Entity : MonoBehaviour
 
         Gizmos.color = Color.green;
         Gizmos.DrawLine(groundCheck.position, groundCheck.position + new Vector3(0, -groundCheckDistance));
+
+        if (wallCheck != null)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawLine(wallCheck.position, wallCheck.position + new Vector3(wallCheckDistance * facingDir, 0));
+        }
     }
 }

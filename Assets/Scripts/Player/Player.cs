@@ -19,6 +19,10 @@ public class Player : Entity
     public Vector2 ledgeClimbOffset1;
     public Vector2 ledgeClimbOffset2;
 
+    [Header("Attack")]
+    [SerializeField] private Transform attackPoint;
+    [SerializeField] private float attackRadius = 0.5f;
+
     public float defaultGravityScale { get; private set; }
 
     public Player_IdleState idleState { get; private set; }
@@ -64,4 +68,15 @@ public class Player : Entity
     }
 
     public LedgeDetection GetLedgeDetection() => ledgeDetection;
+
+    public override void PerformAttack()
+    {
+        Collider2D[] hits = Physics2D.OverlapCircleAll(attackPoint.position, attackRadius);
+
+        foreach (Collider2D hit in hits)
+        {
+            IDamagable damagable = hit.GetComponent<IDamagable>();
+            damagable?.TakeHit(transform);
+        }
+    }
 }

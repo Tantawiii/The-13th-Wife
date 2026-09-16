@@ -8,7 +8,7 @@ public abstract class Player_GroundedState : PlayerState
     {
         base.Update();
 
-        if (!player.groundDetected)
+        if (!player.HasCoyoteGrounding())
         {
             stateMachine.ChangeState(player.jumpState);
             return;
