@@ -8,6 +8,7 @@ public class Player_AttackState : PlayerState
     {
         base.Enter();
         player.SetVelocity(0, rb.linearVelocity.y);
+        stateTimer = player.attackDuration;
     }
 
     public override void Update()
@@ -16,7 +17,9 @@ public class Player_AttackState : PlayerState
 
         // triggerCalled is set by an Animation Event on the Attack clip
         // (Entity_AnimationTriggers.CurrentStateTrigger) once one exists.
-        if (triggerCalled)
+        // stateTimer is the fallback so this state can't get stuck forever
+        // while there's no clip/event to fire it.
+        if (triggerCalled || stateTimer < 0)
             stateMachine.ChangeState(player.idleState);
     }
 }

@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class Player : Entity
+public class Player : Entity, ISaveable
 {
     [Header("Input")]
     [SerializeField] private InputActionAsset inputActions;
@@ -14,14 +14,12 @@ public class Player : Entity
     public float runSpeed = 6f;
     public float jumpForce = 12f;
 
-    [Header("Ledge Climb")]
-    [SerializeField] private LedgeDetection ledgeDetection;
-    public Vector2 ledgeClimbOffset1;
-    public Vector2 ledgeClimbOffset2;
-
     [Header("Attack")]
     [SerializeField] private Transform attackPoint;
     [SerializeField] private float attackRadius = 0.5f;
+    // Fallback so the state can always self-exit even before an Attack
+    // animation/Animation Event exists (triggerCalled is still preferred once it does).
+    public float attackDuration = 0.4f;
 
     public float defaultGravityScale { get; private set; }
 
@@ -30,13 +28,17 @@ public class Player : Entity
     public Player_WalkState walkState { get; private set; }
     public Player_JumpState jumpState { get; private set; }
     public Player_AttackState attackState { get; private set; }
-    public Player_LedgeClimbState ledgeClimbState { get; private set; }
+    public Player_DeadState deadState { get; private set; }
 
     protected override void Awake()
     {
         base.Awake();
 
         defaultGravityScale = rb.gravityScale;
+
+        // Restore any rebind overrides saved from a previous session before
+        // anything below reads the (possibly now-different) bindings.
+        RebindSaveLoad.Load(inputActions);
 
         InputActionMap playerMap = inputActions.FindActionMap("Player");
         moveAction = playerMap.FindAction("Move");
@@ -48,7 +50,7 @@ public class Player : Entity
         walkState = new Player_WalkState(this, stateMachine, "walk");
         jumpState = new Player_JumpState(this, stateMachine, "jumpFall");
         attackState = new Player_AttackState(this, stateMachine, "attack");
-        ledgeClimbState = new Player_LedgeClimbState(this, stateMachine, "ledgeClimb");
+        deadState = new Player_DeadState(this, stateMachine, "death");
     }
 
     protected override void Start()
@@ -67,8 +69,6 @@ public class Player : Entity
         inputActions.FindActionMap("Player").Disable();
     }
 
-    public LedgeDetection GetLedgeDetection() => ledgeDetection;
-
     public override void PerformAttack()
     {
         Collider2D[] hits = Physics2D.OverlapCircleAll(attackPoint.position, attackRadius);
@@ -78,5 +78,23 @@ public class Player : Entity
             IDamagable damagable = hit.GetComponent<IDamagable>();
             damagable?.TakeHit(transform);
         }
+    }
+
+    // Not called from anywhere yet - there's no health/damage system for the
+    // Player. Ready to be wired up once a real death cause exists.
+    public void Die()
+    {
+        stateMachine.ChangeState(deadState);
+    }
+
+    public void LoadData(GameData data)
+    {
+        if (data.hasCheckpoint)
+            transform.position = data.lastCheckpointPosition;
+    }
+
+    public void SaveData(ref GameData data)
+    {
+        // Checkpoint.SaveData already owns writing lastCheckpointPosition.
     }
 }

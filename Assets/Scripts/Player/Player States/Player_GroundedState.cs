@@ -23,13 +23,6 @@ public abstract class Player_GroundedState : PlayerState
         if (player.attackAction.WasPressedThisFrame())
         {
             stateMachine.ChangeState(player.attackState);
-            return;
-        }
-
-        LedgeDetection ledgeDetection = player.GetLedgeDetection();
-        if (ledgeDetection != null && ledgeDetection.ledgeDetected && ledgeDetection.canGrabLedge)
-        {
-            stateMachine.ChangeState(player.ledgeClimbState);
         }
     }
 }
