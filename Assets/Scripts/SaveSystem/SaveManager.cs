@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class SaveManager : MonoBehaviour
 {
-    public const string SaveFileName = "SaveData.json";
+    public const string SaveFileName = "Unnamed.json";
 
     public static SaveManager Instance { get; private set; }
 
@@ -50,8 +50,6 @@ public class SaveManager : MonoBehaviour
         foreach (ISaveable saveable in saveables)
             saveable.LoadData(gameData);
     }
-
-    private void OnApplicationQuit() => SaveGame();
 
     [ContextMenu("Delete Save Data")]
     public void DeleteSaveData()

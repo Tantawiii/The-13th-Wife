@@ -7,9 +7,13 @@ using UnityEngine.UI;
 public class UI_MainMenu : MonoBehaviour
 {
     [SerializeField] private GameObject mainMenuPanel;
+    [SerializeField] private CanvasGroup menuContentGroup;
     [SerializeField] private GameObject optionsPanel;
     [SerializeField] private UI_FadeScreen fadeScreen;
     [SerializeField] private string gameplaySceneName = "Level_0";
+    [SerializeField] private float revealDuration = 1f;
+    [SerializeField] private float contentFadeDuration = 0.5f;
+    [SerializeField] private float tilingDuration = 1f;
     [SerializeField] private float fadeDuration = 1f;
 
     [Header("Continue Button")]
@@ -23,6 +27,42 @@ public class UI_MainMenu : MonoBehaviour
             continueButtonText = continueButton.GetComponentInChildren<TextMeshProUGUI>();
 
         SetContinueButtonState(new FileDataHandler(Application.persistentDataPath, SaveManager.SaveFileName, true).SaveExists());
+
+        // Pinned invisible immediately so there's no flash of the buttons
+        // before the background's own reveal (fade + Tiling settle) finishes.
+        if (menuContentGroup != null)
+        {
+            menuContentGroup.alpha = 0f;
+            menuContentGroup.interactable = false;
+            menuContentGroup.blocksRaycasts = false;
+        }
+    }
+
+    private void Start()
+    {
+        StartCoroutine(RevealMenuCo());
+    }
+
+    private IEnumerator RevealMenuCo()
+    {
+        if (fadeScreen != null)
+            yield return fadeScreen.RevealMainMenu(revealDuration);
+
+        if (menuContentGroup == null)
+            yield break;
+
+        menuContentGroup.interactable = true;
+        menuContentGroup.blocksRaycasts = true;
+
+        float elapsed = 0f;
+        while (elapsed < contentFadeDuration)
+        {
+            elapsed += Time.deltaTime;
+            menuContentGroup.alpha = Mathf.Clamp01(elapsed / contentFadeDuration);
+            yield return null;
+        }
+
+        menuContentGroup.alpha = 1f;
     }
 
     private void SetContinueButtonState(bool hasSave)
@@ -62,8 +102,10 @@ public class UI_MainMenu : MonoBehaviour
 
     private IEnumerator FadeAndLoad()
     {
+        // Grain up first while the menu is still fully visible, then (only
+        // once that finishes) cover the screen for the scene load.
         if (fadeScreen != null)
-            yield return fadeScreen.FadeOut(fadeDuration);
+            yield return fadeScreen.TransitionToGameplay(tilingDuration, fadeDuration);
 
         SceneManager.LoadScene(gameplaySceneName);
     }

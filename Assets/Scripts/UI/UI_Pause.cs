@@ -90,8 +90,10 @@ public class UI_Pause : MonoBehaviour
         // the Main Menu scene we're loading into.
         Time.timeScale = 1f;
 
+        // Blackout only - Tiling stays at the gameplay look through the load;
+        // the Main Menu's own UI_FadeScreen eases it back down after its reveal.
         if (fadeScreen != null)
-            yield return fadeScreen.FadeOut(fadeDuration);
+            yield return fadeScreen.FadeToBlack(fadeDuration);
 
         SceneManager.LoadScene(mainMenuSceneName);
     }
