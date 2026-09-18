@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class Player : Entity, ISaveable
+public class Player : Entity, ISaveable, IDamagable
 {
     [Header("Input")]
     [SerializeField] private InputActionAsset inputActions;
@@ -20,6 +20,10 @@ public class Player : Entity, ISaveable
     // Fallback so the state can always self-exit even before an Attack
     // animation/Animation Event exists (triggerCalled is still preferred once it does).
     public float attackDuration = 0.4f;
+
+    [Header("Health")]
+    public int maxHits = 3;
+    private int hitsTaken;
 
     public float defaultGravityScale { get; private set; }
 
@@ -80,8 +84,28 @@ public class Player : Entity, ISaveable
         }
     }
 
-    // Not called from anywhere yet - there's no health/damage system for the
-    // Player. Ready to be wired up once a real death cause exists.
+    protected override void OnDrawGizmos()
+    {
+        base.OnDrawGizmos();
+
+        if (attackPoint == null)
+            return;
+
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(attackPoint.position, attackRadius);
+    }
+
+    public void TakeHit(Transform attacker)
+    {
+        if (stateMachine.currentState == deadState)
+            return;
+
+        hitsTaken++;
+
+        if (hitsTaken >= maxHits)
+            Die();
+    }
+
     public void Die()
     {
         stateMachine.ChangeState(deadState);

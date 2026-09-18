@@ -13,6 +13,9 @@ public class Enemy : Entity, IDamagable
     public float attackRange = 1f;
     public float detectionRange = 6f;
     public float battleTimeDuration = 5f;
+    // Fallback so the state can always self-exit even before an attack
+    // animation/Animation Event exists (no dedicated attack clip yet - game-jam scope).
+    public float attackDuration = 0.4f;
 
     [Header("Jump To Reach Player")]
     public float jumpForce = 12f;
@@ -77,5 +80,28 @@ public class Enemy : Entity, IDamagable
 
         if (hitsTaken >= maxHits)
             stateMachine.ChangeState(deadState);
+    }
+
+    public override void PerformAttack()
+    {
+        if (player == null)
+            return;
+
+        if (GetHorizontalDistanceToPlayer() <= attackRange && Mathf.Abs(GetVerticalDistanceToPlayer()) <= jumpTriggerHeight)
+        {
+            IDamagable damagable = player.GetComponent<IDamagable>();
+            damagable?.TakeHit(transform);
+        }
+    }
+
+    protected override void OnDrawGizmos()
+    {
+        base.OnDrawGizmos();
+
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(transform.position, detectionRange);
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, attackRange);
     }
 }
