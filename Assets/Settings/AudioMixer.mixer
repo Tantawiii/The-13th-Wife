@@ -53,6 +53,8 @@ AudioMixerController:
     name: bgmMixer
   - guid: 946665ec6d6243198da81442b2655886
     name: sfxMixer
+  - guid: 7531c64372634f929bd361298721ff6d
+    name: masterMixer
   m_AudioMixerGroupViews:
   - guids:
     - ec9a24f60bb1478d8b49bae30799e275

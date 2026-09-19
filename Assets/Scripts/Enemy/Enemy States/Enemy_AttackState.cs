@@ -10,6 +10,7 @@ public class Enemy_AttackState : EnemyState
         enemy.SetVelocity(0, rb.linearVelocity.y);
         stateTimer = enemy.attackDuration;
         enemy.PerformAttack();
+        enemy.MarkAttackPerformed();
     }
 
     public override void Update()
@@ -21,6 +22,6 @@ public class Enemy_AttackState : EnemyState
         // stateTimer is the fallback so this state can't get stuck forever
         // while there's no clip/event to fire it.
         if (triggerCalled || stateTimer < 0)
-            stateMachine.ChangeState(enemy.battleState);
+            stateMachine.ChangeState(enemy.IsPlayerDead() ? enemy.idleState : enemy.battleState);
     }
 }

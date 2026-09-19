@@ -1,6 +1,7 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -9,7 +10,9 @@ public class UI_MainMenu : MonoBehaviour
     [SerializeField] private GameObject mainMenuPanel;
     [SerializeField] private CanvasGroup menuContentGroup;
     [SerializeField] private GameObject optionsPanel;
+    [SerializeField] private GameObject creditsPanel;
     [SerializeField] private UI_FadeScreen fadeScreen;
+    [SerializeField] private AudioClip menuMusicClip;
     [SerializeField] private string gameplaySceneName = "Level_0";
     [SerializeField] private float revealDuration = 1f;
     [SerializeField] private float contentFadeDuration = 0.5f;
@@ -20,6 +23,10 @@ public class UI_MainMenu : MonoBehaviour
     [SerializeField] private Button continueButton;
     [SerializeField] private TextMeshProUGUI continueButtonText;
     [SerializeField] private float disabledAlpha = 65f / 255f;
+
+    [Header("Gamepad Navigation")]
+    [Tooltip("Selected once the reveal finishes, so stick/dpad navigation has a starting point - without this, Navigate has nothing to move away from and looks like it does nothing.")]
+    [SerializeField] private Button newGameButton;
 
     private void Awake()
     {
@@ -40,6 +47,7 @@ public class UI_MainMenu : MonoBehaviour
 
     private void Start()
     {
+        AudioManager.Instance?.PlayBGM(menuMusicClip);
         StartCoroutine(RevealMenuCo());
     }
 
@@ -63,6 +71,10 @@ public class UI_MainMenu : MonoBehaviour
         }
 
         menuContentGroup.alpha = 1f;
+
+        Button defaultSelection = (continueButton != null && continueButton.interactable) ? continueButton : newGameButton;
+        if (defaultSelection != null && EventSystem.current != null)
+            EventSystem.current.SetSelectedGameObject(defaultSelection.gameObject);
     }
 
     private void SetContinueButtonState(bool hasSave)
@@ -93,6 +105,12 @@ public class UI_MainMenu : MonoBehaviour
     {
         mainMenuPanel.SetActive(false);
         optionsPanel.SetActive(true);
+    }
+
+    public void OpenCredits()
+    {
+        mainMenuPanel.SetActive(false);
+        creditsPanel.SetActive(true);
     }
 
     public void Quit()

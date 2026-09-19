@@ -1,7 +1,9 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 // Mirrors RPG2D's UI.cs pattern: the UI action map stays enabled at all times
 // (so Cancel always works to open/close the pause menu regardless of whether
@@ -16,6 +18,8 @@ public class UI_Pause : MonoBehaviour
     [SerializeField] private UI_FadeScreen fadeScreen;
     [SerializeField] private string mainMenuSceneName = "MainMenu";
     [SerializeField] private float fadeDuration = 1f;
+    [Tooltip("Selected whenever the pause panel opens, so gamepad navigation always has a starting point.")]
+    [SerializeField] private Button resumeButton;
 
     private InputAction pauseAction;
     public bool isPaused { get; private set; }
@@ -52,6 +56,9 @@ public class UI_Pause : MonoBehaviour
 
         if (pausePanel != null)
             pausePanel.SetActive(true);
+
+        if (resumeButton != null && EventSystem.current != null)
+            EventSystem.current.SetSelectedGameObject(resumeButton.gameObject);
     }
 
     public void Resume()
@@ -89,6 +96,7 @@ public class UI_Pause : MonoBehaviour
         // would otherwise freeze the fade coroutine (and everything else) in
         // the Main Menu scene we're loading into.
         Time.timeScale = 1f;
+        AudioManager.Instance?.StopAmbient();
 
         // Blackout only - Tiling stays at the gameplay look through the load;
         // the Main Menu's own UI_FadeScreen eases it back down after its reveal.

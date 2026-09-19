@@ -1,3 +1,4 @@
+using Unity.Cinemachine;
 using UnityEngine;
 
 public class Entity : MonoBehaviour
@@ -7,6 +8,10 @@ public class Entity : MonoBehaviour
 
     protected StateMachine stateMachine;
 
+    // Optional - only found if a Cinemachine Impulse Source component is
+    // actually attached, so ShakeCamera() is always safe to call regardless.
+    private CinemachineImpulseSource impulseSource;
+
     private bool facingRight = true;
     public int facingDir { get; private set; } = 1;
 
@@ -15,10 +20,16 @@ public class Entity : MonoBehaviour
     [SerializeField] private float groundCheckDistance = 0.1f;
     [SerializeField] private Transform wallCheck;
     [SerializeField] private float wallCheckDistance = 0.2f;
+    [Tooltip("How far ahead of groundCheck (in facing direction) to look for an upcoming ledge.")]
+    [SerializeField] private float ledgeCheckAheadDistance = 0.5f;
     [SerializeField] private LayerMask whatIsGround;
     [SerializeField] private float coyoteTime = 0.1f;
     public bool groundDetected { get; private set; }
     public bool wallDetected { get; private set; }
+    // True when there's no ground a step ahead in the current facing direction -
+    // lets a patrolling character turn around before it actually walks off the
+    // edge, instead of only reacting once its own origin has already passed it.
+    public bool ledgeAhead { get; private set; }
 
     private float lastGroundedTime = -999f;
 
@@ -27,7 +38,10 @@ public class Entity : MonoBehaviour
         animator = GetComponentInChildren<Animator>();
         rb = GetComponent<Rigidbody2D>();
         stateMachine = new StateMachine();
+        impulseSource = GetComponent<CinemachineImpulseSource>();
     }
+
+    protected void ShakeCamera(float force = 1f) => impulseSource?.GenerateImpulseWithForce(force);
 
     protected virtual void Start()
     {
@@ -79,6 +93,9 @@ public class Entity : MonoBehaviour
             lastGroundedTime = Time.time;
 
         wallDetected = wallCheck != null && Physics2D.Raycast(wallCheck.position, Vector2.right * facingDir, wallCheckDistance, whatIsGround);
+
+        Vector2 aheadOrigin = (Vector2)groundCheck.position + Vector2.right * facingDir * ledgeCheckAheadDistance;
+        ledgeAhead = !Physics2D.Raycast(aheadOrigin, Vector2.down, groundCheckDistance, whatIsGround);
     }
 
     // Absorbs a single missed ground-raycast frame (physics resting jitter) so a
@@ -100,5 +117,9 @@ public class Entity : MonoBehaviour
             Gizmos.color = Color.red;
             Gizmos.DrawLine(wallCheck.position, wallCheck.position + new Vector3(wallCheckDistance * facingDir, 0));
         }
+
+        Gizmos.color = Color.yellow;
+        Vector3 aheadOrigin = groundCheck.position + new Vector3(ledgeCheckAheadDistance * facingDir, 0);
+        Gizmos.DrawLine(aheadOrigin, aheadOrigin + new Vector3(0, -groundCheckDistance));
     }
 }

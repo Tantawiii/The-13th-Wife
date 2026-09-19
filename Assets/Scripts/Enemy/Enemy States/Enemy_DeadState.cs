@@ -18,5 +18,9 @@ public class Enemy_DeadState : EnemyState
         enemy.GetComponent<Collider2D>().enabled = false;
 
         stateMachine.SwitchOffStateMachine();
+
+        // Long enough to read the pop-and-fall before it's recycled back into
+        // the spawner's pool.
+        enemy.DelayedReturnToPool(2f);
     }
 }

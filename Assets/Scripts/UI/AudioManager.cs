@@ -11,6 +11,7 @@ public class AudioManager : MonoBehaviour
 
     [SerializeField] private AudioSource bgmSource;
     [SerializeField] private AudioSource sfxSource;
+    [SerializeField] private AudioSource ambientSource;
 
     private void Awake()
     {
@@ -24,13 +25,15 @@ public class AudioManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    public void PlayBGM(AudioClip clip, bool loop = true)
+    // Always loops - there's no case in this game where BGM should play once
+    // and stop.
+    public void PlayBGM(AudioClip clip)
     {
         if (bgmSource == null || clip == null)
             return;
 
         bgmSource.clip = clip;
-        bgmSource.loop = loop;
+        bgmSource.loop = true;
         bgmSource.Play();
     }
 
@@ -40,5 +43,23 @@ public class AudioManager : MonoBehaviour
             return;
 
         sfxSource.PlayOneShot(clip);
+    }
+
+    // Separate looping channel from bgmSource - lets an ambient layer (e.g.
+    // the in-game film grain noise) run underneath the music independently.
+    public void PlayAmbient(AudioClip clip)
+    {
+        if (ambientSource == null || clip == null)
+            return;
+
+        ambientSource.clip = clip;
+        ambientSource.loop = true;
+        ambientSource.Play();
+    }
+
+    public void StopAmbient()
+    {
+        if (ambientSource != null)
+            ambientSource.Stop();
     }
 }

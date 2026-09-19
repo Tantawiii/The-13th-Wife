@@ -23,7 +23,18 @@ public class Player : Entity, ISaveable, IDamagable
 
     [Header("Health")]
     public int maxHits = 3;
+    public const int MaxPossibleHits = 10;
     private int hitsTaken;
+    public int HitsTaken => hitsTaken;
+
+    // Fired whenever hitsTaken or maxHits changes - lets UI_HealthDisplay
+    // refresh reactively instead of polling every frame.
+    public event System.Action OnHealthChanged;
+
+    [SerializeField] private UI_LevelLose levelLoseUI;
+    [SerializeField] private UI_FloatingPopup bonusLifePopup;
+
+    public bool IsDead => stateMachine.currentState == deadState;
 
     public float defaultGravityScale { get; private set; }
 
@@ -101,14 +112,34 @@ public class Player : Entity, ISaveable, IDamagable
             return;
 
         hitsTaken++;
+        ShakeCamera();
+        OnHealthChanged?.Invoke();
 
         if (hitsTaken >= maxHits)
             Die();
     }
 
+    // Called by an Enemy's death roll - a chance-based reward for fighting
+    // through, capped so the fight never becomes trivial.
+    public void GrantBonusLife()
+    {
+        if (maxHits >= MaxPossibleHits)
+            return;
+
+        maxHits++;
+        OnHealthChanged?.Invoke();
+
+        if (bonusLifePopup != null)
+            bonusLifePopup.Show("+1 Life");
+    }
+
     public void Die()
     {
         stateMachine.ChangeState(deadState);
+        ScoreManager.Instance?.StopTracking();
+
+        if (levelLoseUI != null)
+            levelLoseUI.ShowLoseScreen();
     }
 
     public void LoadData(GameData data)
