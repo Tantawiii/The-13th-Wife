@@ -129,6 +129,7 @@ GameObject:
   m_Component:
   - component: {fileID: 58890780}
   - component: {fileID: 58890779}
+  - component: {fileID: 9730000002}
   m_Layer: 0
   m_Name: Video Player (1)
   m_TagString: Untagged
@@ -144,7 +145,7 @@ VideoPlayer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 58890778}
   m_Enabled: 1
-  m_VideoClip: {fileID: 32900000, guid: b0b317193776e944a9f1670eff9ba3f9, type: 3}
+  m_VideoClip: {fileID: 0}
   m_TargetCameraAlpha: 1
   m_TargetCamera3DLayout: 0
   m_TargetCamera: {fileID: 0}
@@ -154,7 +155,7 @@ VideoPlayer:
   m_TargetMaterialProperty: <noninit>
   m_RenderMode: 2
   m_AspectRatio: 2
-  m_DataSource: 0
+  m_DataSource: 1
   m_TimeUpdateMode: 2
   m_PlaybackSpeed: 1
   m_AudioOutputMode: 0
@@ -166,12 +167,25 @@ VideoPlayer:
   m_EnabledAudioTracks: 01o
   m_DirectAudioMutes: 00o
   m_ControlledAudioTrackCount: 1
-  m_PlayOnAwake: 1
+  m_PlayOnAwake: 0
   m_SkipOnDrop: 0
   m_Looping: 1
   m_WaitForFirstFrame: 1
   m_FrameReadyEventEnabled: 0
   m_VideoShaders: []
+--- !u!114 &9730000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 58890778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7630fe085bf74396b598069e9a905500, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VideoStreamingSetup
+  fileName: FilmGrainOverlay.mp4
 --- !u!4 &58890780
 Transform:
   m_ObjectHideFlags: 0
@@ -408,6 +422,7 @@ GameObject:
   m_Component:
   - component: {fileID: 445215341}
   - component: {fileID: 445215340}
+  - component: {fileID: 9730000001}
   m_Layer: 0
   m_Name: Video Player
   m_TagString: Untagged
@@ -423,7 +438,7 @@ VideoPlayer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 445215339}
   m_Enabled: 1
-  m_VideoClip: {fileID: 32900000, guid: d8e379ec37892b242858494fc6bf293c, type: 3}
+  m_VideoClip: {fileID: 0}
   m_TargetCameraAlpha: 1
   m_TargetCamera3DLayout: 0
   m_TargetCamera: {fileID: 0}
@@ -433,7 +448,7 @@ VideoPlayer:
   m_TargetMaterialProperty: <noninit>
   m_RenderMode: 2
   m_AspectRatio: 2
-  m_DataSource: 0
+  m_DataSource: 1
   m_TimeUpdateMode: 2
   m_PlaybackSpeed: 1
   m_AudioOutputMode: 0
@@ -445,12 +460,25 @@ VideoPlayer:
   m_EnabledAudioTracks: 01o
   m_DirectAudioMutes: 00o
   m_ControlledAudioTrackCount: 1
-  m_PlayOnAwake: 1
+  m_PlayOnAwake: 0
   m_SkipOnDrop: 0
   m_Looping: 1
   m_WaitForFirstFrame: 1
   m_FrameReadyEventEnabled: 0
   m_VideoShaders: []
+--- !u!114 &9730000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 445215339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7630fe085bf74396b598069e9a905500, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VideoStreamingSetup
+  fileName: FilmRollOverlay.mp4
 --- !u!4 &445215341
 Transform:
   m_ObjectHideFlags: 0
@@ -821,6 +849,10 @@ MonoBehaviour:
   bgmSource: {fileID: 9600000003}
   sfxSource: {fileID: 9600000004}
   ambientSource: {fileID: 9600000005}
+  audioMixer: {fileID: 24100000, guid: 70ac57e3d0e04e2491d7a48f7cf7eb67, type: 2}
+  masterParameter: masterMixer
+  bgmParameter: bgmMixer
+  sfxParameter: sfxMixer
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

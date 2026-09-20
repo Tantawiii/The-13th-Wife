@@ -25,7 +25,7 @@ public class SaveManager : MonoBehaviour
         dataHandler = new FileDataHandler(Application.persistentDataPath, SaveFileName, encryptData);
         saveables = FindSaveables();
 
-        yield return null; // let every ISaveable finish its own Awake/Start first
+        yield return null;
 
         LoadGame();
     }

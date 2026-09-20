@@ -53,24 +53,30 @@ MonoBehaviour:
   groundCheck: {fileID: 153239999242260815}
   groundCheckDistance: 1.14
   wallCheck: {fileID: 6325495912645206939}
-  wallCheckDistance: 0.68
+  wallCheckDistance: 1.8
+  ledgeCheckAheadDistance: 0.8
   whatIsGround:
     serializedVersion: 2
     m_Bits: 128
   coyoteTime: 0.1
   moveSpeed: 1.4
   idleTime: 2
+  canIdle: 0
+  isBoss: 0
+  bossVictoryUI: {fileID: 0}
   battleMoveSpeed: 3
   attackRange: 1
   detectionRange: 6
   battleTimeDuration: 5
   attackDuration: 0.4
+  attackCooldown: 2
   jumpForce: 18
   jumpTriggerHeight: 1.2
-  jumpHorizontalRange: 4
+  landingCheckRadius: 0.3
+  landingCheckSamples: 12
+  landingCheckMaxTime: 2
   maxHits: 3
-  canIdle: 0
-  isBoss: 0
+  bonusLifeChance: 0.65
 --- !u!50 &6916114655660217689
 Rigidbody2D:
   serializedVersion: 5

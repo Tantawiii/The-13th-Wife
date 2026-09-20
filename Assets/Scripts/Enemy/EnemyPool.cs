@@ -1,13 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Reuses Enemy instances instead of Instantiate/Destroy on every spawn/death.
-// Holds one sub-pool per prefab in enemyPrefabs, so several different enemy
-// types can share the same pool and spawner. Each prefab needs a real prefab
-// asset (drag the GameObject from the Hierarchy into a project folder) - it
-// can't clone a lone scene instance safely once that instance itself gets
-// pooled and reused.
-// Shadya is a hand-placed boss, not a random spawn - leave her out of this list.
 public class EnemyPool : MonoBehaviour
 {
     [SerializeField] private Enemy[] enemyPrefabs;
@@ -17,7 +10,6 @@ public class EnemyPool : MonoBehaviour
 
     public int ActiveCount { get; private set; }
 
-    // Picks one of enemyPrefabs at random and gets/creates a pooled instance of it.
     public Enemy GetRandom(Vector3 position)
     {
         if (enemyPrefabs == null || enemyPrefabs.Length == 0)

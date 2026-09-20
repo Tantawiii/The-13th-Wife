@@ -2,9 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// Periodically pulls a pooled enemy and "draws" it onto a ground platform -
-// a brush sprite sweeps across the spawn point while the enemy fades in
-// underneath, Looney Tunes style, before it's actually turned loose.
 public class EnemySpawner : MonoBehaviour
 {
     private static readonly List<EnemySpawner> activeSpawners = new List<EnemySpawner>();
@@ -54,16 +51,12 @@ public class EnemySpawner : MonoBehaviour
         StartCoroutine(SpawnLoop());
     }
 
-    // Called once Shadya (or any boss) goes down - the run is over, nothing
-    // else should keep appearing.
     public static void StopAllSpawning()
     {
         foreach (EnemySpawner spawner in activeSpawners)
             spawner.spawningStopped = true;
     }
 
-    // Temporary hold (boss-gate timeline) - unlike StopAllSpawning, this is
-    // expected to be lifted again via ResumeAllSpawning().
     public static void PauseAllSpawning()
     {
         foreach (EnemySpawner spawner in activeSpawners)
@@ -113,8 +106,6 @@ public class EnemySpawner : MonoBehaviour
         if (enemy == null)
             yield break;
 
-        // GetRandom only placed it at the raw ground point - lift it so its
-        // own feet (not its transform origin) land on the surface.
         Vector3 spawnPosition = groundPoint;
         spawnPosition.y += enemy.GetFeetOffset();
         enemy.transform.position = spawnPosition;

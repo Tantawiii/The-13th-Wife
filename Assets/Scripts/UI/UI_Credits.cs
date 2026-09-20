@@ -1,12 +1,12 @@
+using System.Collections;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
-// Auto-scrolls creditsContent upward inside viewport (which should have a
-// RectMask2D so it clips cleanly). Reusable in two contexts: opened from the
-// Main Menu (loops forever, Back button returns to it), or played once after
-// beating Shadya (returnToMainMenuWhenFinished, no loop, no Back button needed).
 public class UI_Credits : MonoBehaviour
 {
+    [SerializeField] private InputActionAsset inputActions;
+
     [SerializeField] private GameObject selfPanel;
     [SerializeField] private GameObject panelToReturnTo;
 
@@ -17,13 +17,45 @@ public class UI_Credits : MonoBehaviour
     [SerializeField] private bool loopWhenFinished = true;
     [SerializeField] private bool returnToMainMenuWhenFinished = false;
     [SerializeField] private string mainMenuSceneName = "MainMenu";
+    [Tooltip("Level_0 context only - closes over everything right before the Main Menu load.")]
+    [SerializeField] private UI_Curtain curtain;
 
+    private InputAction cancelAction;
     private bool finished;
+
+    private void Awake()
+    {
+        cancelAction = inputActions.FindActionMap("UI").FindAction("Cancel");
+    }
 
     private void OnEnable()
     {
         finished = false;
         ResetScroll();
+
+        inputActions.FindActionMap("UI").Enable();
+        cancelAction.performed += OnCancelPressed;
+    }
+
+    private void OnDisable()
+    {
+        cancelAction.performed -= OnCancelPressed;
+    }
+
+    private void OnCancelPressed(InputAction.CallbackContext context)
+    {
+        if (finished)
+            return;
+
+        if (returnToMainMenuWhenFinished)
+        {
+            finished = true;
+            StartCoroutine(ReturnToMainMenuCo());
+        }
+        else
+        {
+            Back();
+        }
     }
 
     private void ResetScroll()
@@ -31,7 +63,6 @@ public class UI_Credits : MonoBehaviour
         if (content == null || viewport == null)
             return;
 
-        // Content's top edge starts just below the viewport's bottom edge.
         float startY = -(viewport.rect.height * 0.5f + content.rect.height * 0.5f);
         content.anchoredPosition = new Vector2(content.anchoredPosition.x, startY);
     }
@@ -56,10 +87,17 @@ public class UI_Credits : MonoBehaviour
         finished = true;
 
         if (returnToMainMenuWhenFinished)
-            SceneManager.LoadScene(mainMenuSceneName);
+            StartCoroutine(ReturnToMainMenuCo());
     }
 
-    // Wired to the Credits panel's own Back button (Main Menu context only).
+    private IEnumerator ReturnToMainMenuCo()
+    {
+        if (curtain != null)
+            yield return curtain.PlayClose();
+
+        SceneManager.LoadScene(mainMenuSceneName);
+    }
+
     public void Back()
     {
         if (selfPanel != null)

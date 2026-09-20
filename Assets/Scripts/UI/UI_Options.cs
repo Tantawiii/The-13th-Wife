@@ -7,9 +7,6 @@ using UnityEngine.UI;
 public class UI_Options : MonoBehaviour
 {
     private const float UnselectedTabAlpha = 65f / 255f;
-    private const float MixerMultiplier = 25f;
-    private const float MutedDb = -80f;
-    private const string MutedKeySuffix = "_Muted";
 
     [Header("Navigation")]
     [SerializeField] private GameObject selfPanel;
@@ -84,16 +81,12 @@ public class UI_Options : MonoBehaviour
         text.color = color;
     }
 
-    // Wired to each panel's close-toggle OnValueChanged.
     public void CloseImmediately(bool isOn)
     {
         if (isOn)
             Back();
     }
 
-    // Generic close-and-return, reused by both the Main Menu's Options panel
-    // and the in-game Pause menu's Options panel - whichever panel opened
-    // this one is what gets reactivated.
     public void Back()
     {
         if (selfPanel != null)
@@ -111,75 +104,57 @@ public class UI_Options : MonoBehaviour
 
     private void LoadChannel(Slider slider, Toggle toggle, string parameter)
     {
-        float volume = PlayerPrefs.GetFloat(parameter, .6f);
-        bool muted = PlayerPrefs.GetInt(parameter + MutedKeySuffix, 0) == 1;
+        float volume = AudioVolume.LoadVolume(parameter);
+        bool muted = AudioVolume.LoadMuted(parameter);
 
-        // Set without notifying - loading saved state shouldn't itself count
-        // as a user edit that re-writes PlayerPrefs.
         if (slider != null)
             slider.SetValueWithoutNotify(volume);
 
-        // Toggle is "on" = unmuted, so it always reads as the enabled checkbox.
         if (toggle != null)
             toggle.SetIsOnWithoutNotify(!muted);
 
-        ApplyToMixer(parameter, volume, muted);
+        AudioVolume.Apply(audioMixer, parameter, volume, muted);
     }
 
-    private void ApplyToMixer(string parameter, float volume, bool muted)
-    {
-        if (audioMixer == null)
-            return;
-
-        float dB = muted ? MutedDb : Mathf.Log10(Mathf.Max(volume, 0.0001f)) * MixerMultiplier;
-        audioMixer.SetFloat(parameter, dB);
-    }
-
-    // Wire to the Master slider's OnValueChanged in the Inspector.
     public void SetMasterVolume(float value)
     {
-        PlayerPrefs.SetFloat(masterParameter, value);
-        ApplyToMixer(masterParameter, value, masterMuteToggle != null && !masterMuteToggle.isOn);
+        AudioVolume.SaveVolume(masterParameter, value);
+        AudioVolume.Apply(audioMixer, masterParameter, value, masterMuteToggle != null && !masterMuteToggle.isOn);
     }
 
-    // Wire to the Master toggle's OnValueChanged in the Inspector.
     public void SetMasterMuted(bool isOn)
     {
         bool muted = !isOn;
-        PlayerPrefs.SetInt(masterParameter + MutedKeySuffix, muted ? 1 : 0);
-        float volume = masterVolumeSlider != null ? masterVolumeSlider.value : PlayerPrefs.GetFloat(masterParameter, .6f);
-        ApplyToMixer(masterParameter, volume, muted);
+        AudioVolume.SaveMuted(masterParameter, muted);
+        float volume = masterVolumeSlider != null ? masterVolumeSlider.value : AudioVolume.LoadVolume(masterParameter);
+        AudioVolume.Apply(audioMixer, masterParameter, volume, muted);
     }
 
-    // Wire to the BGM slider's OnValueChanged in the Inspector.
     public void SetBGMVolume(float value)
     {
-        PlayerPrefs.SetFloat(bgmParameter, value);
-        ApplyToMixer(bgmParameter, value, bgmMuteToggle != null && !bgmMuteToggle.isOn);
+        AudioVolume.SaveVolume(bgmParameter, value);
+        AudioVolume.Apply(audioMixer, bgmParameter, value, bgmMuteToggle != null && !bgmMuteToggle.isOn);
     }
 
-    // Wire to the BGM toggle's OnValueChanged in the Inspector.
     public void SetBGMMuted(bool isOn)
     {
         bool muted = !isOn;
-        PlayerPrefs.SetInt(bgmParameter + MutedKeySuffix, muted ? 1 : 0);
-        float volume = bgmVolumeSlider != null ? bgmVolumeSlider.value : PlayerPrefs.GetFloat(bgmParameter, .6f);
-        ApplyToMixer(bgmParameter, volume, muted);
+        AudioVolume.SaveMuted(bgmParameter, muted);
+        float volume = bgmVolumeSlider != null ? bgmVolumeSlider.value : AudioVolume.LoadVolume(bgmParameter);
+        AudioVolume.Apply(audioMixer, bgmParameter, volume, muted);
     }
 
-    // Wire to the SFX slider's OnValueChanged in the Inspector.
     public void SetSFXVolume(float value)
     {
-        PlayerPrefs.SetFloat(sfxParameter, value);
-        ApplyToMixer(sfxParameter, value, sfxMuteToggle != null && !sfxMuteToggle.isOn);
+        AudioVolume.SaveVolume(sfxParameter, value);
+        AudioVolume.Apply(audioMixer, sfxParameter, value, sfxMuteToggle != null && !sfxMuteToggle.isOn);
     }
 
-    // Wire to the SFX toggle's OnValueChanged in the Inspector.
     public void SetSFXMuted(bool isOn)
     {
         bool muted = !isOn;
-        PlayerPrefs.SetInt(sfxParameter + MutedKeySuffix, muted ? 1 : 0);
-        float volume = sfxVolumeSlider != null ? sfxVolumeSlider.value : PlayerPrefs.GetFloat(sfxParameter, .6f);
-        ApplyToMixer(sfxParameter, volume, muted);
+        AudioVolume.SaveMuted(sfxParameter, muted);
+        float volume = sfxVolumeSlider != null ? sfxVolumeSlider.value : AudioVolume.LoadVolume(sfxParameter);
+        AudioVolume.Apply(audioMixer, sfxParameter, volume, muted);
     }
 }

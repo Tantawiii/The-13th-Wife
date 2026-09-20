@@ -1,9 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-// Drives the heart icons (each worth 2 hits) from Player's current hits taken
-// vs current max hits. Hearts beyond the current max are hidden entirely -
-// maxHits can grow at runtime via Player.GrantBonusLife, up to Player.MaxPossibleHits.
 public class UI_HealthDisplay : MonoBehaviour
 {
     [SerializeField] private Player player;

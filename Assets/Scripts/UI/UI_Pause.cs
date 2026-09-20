@@ -5,11 +5,6 @@ using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-// Mirrors RPG2D's UI.cs pattern: the UI action map stays enabled at all times
-// (so Cancel always works to open/close the pause menu regardless of whether
-// gameplay is currently running); only the Player action map gets toggled
-// off while paused, so the two can never end up both active (moving the
-// character while a menu is open) or both inactive (stuck input) at once.
 public class UI_Pause : MonoBehaviour
 {
     [SerializeField] private InputActionAsset inputActions;
@@ -23,6 +18,8 @@ public class UI_Pause : MonoBehaviour
 
     private InputAction pauseAction;
     public bool isPaused { get; private set; }
+
+    public static bool IsPaused { get; private set; }
 
     private void Awake()
     {
@@ -51,6 +48,7 @@ public class UI_Pause : MonoBehaviour
     public void Pause()
     {
         isPaused = true;
+        IsPaused = true;
         Time.timeScale = 0f;
         inputActions.FindActionMap("Player").Disable();
 
@@ -64,6 +62,7 @@ public class UI_Pause : MonoBehaviour
     public void Resume()
     {
         isPaused = false;
+        IsPaused = false;
         Time.timeScale = 1f;
 
         if (optionsPanel != null)
@@ -92,14 +91,11 @@ public class UI_Pause : MonoBehaviour
         if (SaveManager.Instance != null)
             SaveManager.Instance.SaveGame();
 
-        // Reset before leaving, not after - a lingering Time.timeScale of 0
-        // would otherwise freeze the fade coroutine (and everything else) in
-        // the Main Menu scene we're loading into.
+        isPaused = false;
+        IsPaused = false;
         Time.timeScale = 1f;
         AudioManager.Instance?.StopAmbient();
 
-        // Blackout only - Tiling stays at the gameplay look through the load;
-        // the Main Menu's own UI_FadeScreen eases it back down after its reveal.
         if (fadeScreen != null)
             yield return fadeScreen.FadeToBlack(fadeDuration);
 

@@ -51,8 +51,8 @@ Material:
     m_Floats:
     - _Float: 0
     - _Half: -1.73
-    - _LerpValue: 0
-    - _Tiling: 0
+    - _LerpValue: 1
+    - _Tiling: 1
     - _Val: 1
     m_Colors: []
   m_BuildTextureStacks: []

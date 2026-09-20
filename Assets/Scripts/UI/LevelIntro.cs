@@ -1,9 +1,9 @@
 using System.Collections;
 using UnityEngine;
 
-// Plays the opening dialogue line once the level starts.
 public class LevelIntro : MonoBehaviour
 {
+    [SerializeField] private UI_Curtain curtain;
     [SerializeField] private UI_TypewriterText typewriter;
     [SerializeField] private float startDelay = 1f;
     [TextArea]
@@ -11,6 +11,7 @@ public class LevelIntro : MonoBehaviour
 
     private void Start()
     {
+        curtain?.Open();
         StartCoroutine(PlayIntroCo());
     }
 

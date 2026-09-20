@@ -1,9 +1,6 @@
 using System.Collections;
 using UnityEngine;
 
-// Called by Enemy.Die() when the boss (Shadya) goes down: "To Be Continued"
-// holds for a few seconds, fades out, then the credits panel takes over and
-// rolls once more before returning to the Main Menu.
 public class UI_BossVictory : MonoBehaviour
 {
     [SerializeField] private AudioClip victoryClip;
@@ -13,6 +10,13 @@ public class UI_BossVictory : MonoBehaviour
     [SerializeField] private float fadeDuration = 1f;
     [SerializeField] private GameObject creditsPanel;
 
+    [Tooltip("HUD elements (health hearts, score, profile background) to fade out as \"To Be Continued\" appears, so they don't sit on top of it or the credits after.")]
+    [SerializeField] private CanvasGroup healthGroup;
+    [SerializeField] private CanvasGroup scoreGroup;
+    [SerializeField] private CanvasGroup profileGroup;
+    [Tooltip("The dialogue overlay - if a line is still showing when the boss dies, it fades out with everything else instead of sitting on top of \"To Be Continued\"/credits.")]
+    [SerializeField] private UI_TypewriterText dialogue;
+
     public void ShowVictory()
     {
         StartCoroutine(ShowVictoryCo());
@@ -20,6 +24,9 @@ public class UI_BossVictory : MonoBehaviour
 
     private IEnumerator ShowVictoryCo()
     {
+        StartCoroutine(HudFader.FadeOut(fadeDuration, healthGroup, scoreGroup, profileGroup));
+        dialogue?.FadeOutImmediately(fadeDuration);
+
         AudioManager.Instance?.PlaySFX(victoryClip);
 
         if (toBeContinuedObject != null)

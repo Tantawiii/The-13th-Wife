@@ -118,12 +118,12 @@ TextureImporter:
       name: brush_0
       rect:
         serializedVersion: 2
-        x: 853
-        y: 90
-        width: 592
-        height: 483
+        x: 844
+        y: 89
+        width: 600
+        height: 484
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -140,7 +140,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 04f0b71ffb191714d88f66cb360ed0ea
     internalID: 0
     vertices: []
     indices: 

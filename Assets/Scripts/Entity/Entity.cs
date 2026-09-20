@@ -8,8 +8,6 @@ public class Entity : MonoBehaviour
 
     protected StateMachine stateMachine;
 
-    // Optional - only found if a Cinemachine Impulse Source component is
-    // actually attached, so ShakeCamera() is always safe to call regardless.
     private CinemachineImpulseSource impulseSource;
 
     private bool facingRight = true;
@@ -26,9 +24,6 @@ public class Entity : MonoBehaviour
     [SerializeField] private float coyoteTime = 0.1f;
     public bool groundDetected { get; private set; }
     public bool wallDetected { get; private set; }
-    // True when there's no ground a step ahead in the current facing direction -
-    // lets a patrolling character turn around before it actually walks off the
-    // edge, instead of only reacting once its own origin has already passed it.
     public bool ledgeAhead { get; private set; }
 
     private float lastGroundedTime = -999f;
@@ -98,8 +93,6 @@ public class Entity : MonoBehaviour
         ledgeAhead = !Physics2D.Raycast(aheadOrigin, Vector2.down, groundCheckDistance, whatIsGround);
     }
 
-    // Absorbs a single missed ground-raycast frame (physics resting jitter) so a
-    // grounded state doesn't get bounced into an airborne one by a one-frame flicker.
     public bool HasCoyoteGrounding() => Time.time - lastGroundedTime <= coyoteTime;
 
     public LayerMask GetWhatIsGround() => whatIsGround;

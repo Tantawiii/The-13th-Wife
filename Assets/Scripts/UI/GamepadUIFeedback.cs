@@ -3,15 +3,6 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-// Makes gamepad UI navigation visible without touching how mouse/keyboard
-// interaction already looks: while a gamepad was the last device used, the
-// EventSystem's current selection gets its background pushed to a light grey
-// and its highlight tint pushed to match, so it clearly reads as "this is
-// where you are" without a visible cursor. The moment the mouse or keyboard
-// is used, the override is dropped and the button reverts to whatever it was
-// already authored to look like. Applies scene-wide (Options, Pause, Lose,
-// wherever the current selection happens to be) since it just follows
-// whatever EventSystem.current.currentSelectedGameObject is.
 public class GamepadUIFeedback : MonoBehaviour
 {
     [SerializeField] private Color selectedBackgroundColor = new Color(0.75f, 0.75f, 0.75f, 1f);
@@ -39,11 +30,6 @@ public class GamepadUIFeedback : MonoBehaviour
             ApplyHighlight(current);
     }
 
-    // wasUpdatedThisFrame fires on the tiniest state change - including
-    // sub-deadzone stick drift and phantom zero-delta mouse "still here"
-    // events some OSes send every frame - which was flipping gamepadActive
-    // back off almost immediately and making the highlight a one-frame
-    // glimpse. Requiring an actually meaningful input keeps it stable.
     private const float StickActivationThreshold = 0.5f;
     private const float MouseMoveThreshold = 0.1f;
 

@@ -8,8 +8,6 @@ public class Enemy_MoveState : Enemy_GroundedState
     {
         base.Enter();
 
-        // Already facing a ledge/wall from the last time this state ran - turn
-        // around before setting off again.
         if (!enemy.groundDetected || enemy.wallDetected || enemy.ledgeAhead)
             enemy.Flip();
     }
@@ -20,10 +18,6 @@ public class Enemy_MoveState : Enemy_GroundedState
 
         if (!enemy.groundDetected || enemy.wallDetected || enemy.ledgeAhead)
         {
-            // Enemy types without an idle animation just turn around in place
-            // and keep going - routing them through Enemy_IdleState leaves
-            // their Animator on a bool it doesn't have a state for, freezing
-            // the animation instead of looking idle.
             if (!enemy.canIdle)
             {
                 enemy.Flip();

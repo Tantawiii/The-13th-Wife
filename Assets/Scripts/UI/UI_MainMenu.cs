@@ -35,8 +35,6 @@ public class UI_MainMenu : MonoBehaviour
 
         SetContinueButtonState(new FileDataHandler(Application.persistentDataPath, SaveManager.SaveFileName, true).SaveExists());
 
-        // Pinned invisible immediately so there's no flash of the buttons
-        // before the background's own reveal (fade + Tiling settle) finishes.
         if (menuContentGroup != null)
         {
             menuContentGroup.alpha = 0f;
@@ -120,8 +118,6 @@ public class UI_MainMenu : MonoBehaviour
 
     private IEnumerator FadeAndLoad()
     {
-        // Grain up first while the menu is still fully visible, then (only
-        // once that finishes) cover the screen for the scene load.
         if (fadeScreen != null)
             yield return fadeScreen.TransitionToGameplay(tilingDuration, fadeDuration);
 

@@ -2,10 +2,6 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-// Wraps the "Invisible Boss Wall" tilemap - fades its tiles out/in and
-// enables/disables its collider(s) to match, so both the boss-gate opening
-// (BossGateController) and the boss-area entry trap (BossAreaEntryTrigger)
-// drive the same visual/physical toggle.
 public class BossWallController : MonoBehaviour
 {
     [SerializeField] private Tilemap tilemap;
@@ -21,8 +17,6 @@ public class BossWallController : MonoBehaviour
         colliders = GetComponents<Collider2D>();
     }
 
-    // open = true fades the wall away and disables its colliders.
-    // open = false brings it back and re-enables them.
     public void SetOpen(bool open, bool instant = false)
     {
         if (activeRoutine != null)

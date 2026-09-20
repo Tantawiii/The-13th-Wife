@@ -9,10 +9,6 @@ public class Checkpoint : MonoBehaviour, ISaveable
 
     private bool isActive;
 
-    // Tracks which checkpoint was touched most recently THIS session, so
-    // SaveData knows whose position to write as the respawn point even though
-    // FindObjectsByType's iteration order isn't touch-chronological. Stored by
-    // ID (not a direct reference) so it round-trips correctly through save/load.
     private static string lastActivatedID;
 
     private void OnValidate()

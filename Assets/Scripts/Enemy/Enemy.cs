@@ -11,7 +11,8 @@ public class Enemy : Entity, IDamagable
     private EnemyPool sourcePool;
     private float defaultGravityScale;
     private float feetOffset;
-    private bool frozen;
+
+    public static bool AttacksDisabled { get; set; }
 
     [Header("Patrol")]
     public float moveSpeed = 1.4f;
@@ -29,8 +30,6 @@ public class Enemy : Entity, IDamagable
     public float attackRange = 1f;
     public float detectionRange = 6f;
     public float battleTimeDuration = 5f;
-    // Fallback so the state can always self-exit even before an attack
-    // animation/Animation Event exists (no dedicated attack clip yet - game-jam scope).
     public float attackDuration = 0.4f;
     [Tooltip("Minimum time between attacks - without this, staying in range re-triggers the attack animation the instant it ends, reading as spammy.")]
     public float attackCooldown = 1f;
@@ -40,7 +39,46 @@ public class Enemy : Entity, IDamagable
     [Header("Jump To Reach Player")]
     public float jumpForce = 12f;
     public float jumpTriggerHeight = 1.2f;
-    public float jumpHorizontalRange = 4f;
+
+    [Header("Jump Landing Check")]
+    [Tooltip("Radius checked for ground at each sampled point along the simulated jump arc.")]
+    [SerializeField] private float landingCheckRadius = 0.3f;
+    [Tooltip("How many points along the simulated jump arc (and the fall that follows it) to test for a safe landing.")]
+    [SerializeField] private int landingCheckSamples = 12;
+    [Tooltip("How long to simulate the jump + fall for, in seconds - generous enough to cover landing well below the takeoff point too, not just back at launch height.")]
+    [SerializeField] private float landingCheckMaxTime = 2f;
+
+    public bool HasJumpLanding(int direction)
+    {
+        float gravity = Physics2D.gravity.y * rb.gravityScale;
+
+        if (gravity >= 0f)
+            return false;
+
+        Vector2 previous = transform.position;
+
+        for (int i = 1; i <= landingCheckSamples; i++)
+        {
+            float t = landingCheckMaxTime * i / landingCheckSamples;
+            float x = battleMoveSpeed * direction * t;
+            float y = jumpForce * t + 0.5f * gravity * t * t;
+
+            Vector2 point = (Vector2)transform.position + new Vector2(x, y);
+            Vector2 segment = point - previous;
+            float distance = segment.magnitude;
+
+            RaycastHit2D hit = distance > 0.001f
+                ? Physics2D.CircleCast(previous, landingCheckRadius, segment / distance, distance, GetWhatIsGround())
+                : Physics2D.CircleCast(previous, landingCheckRadius, Vector2.down, 0f, GetWhatIsGround());
+
+            if (hit.collider != null && hit.normal.y > 0.5f)
+                return true;
+
+            previous = point;
+        }
+
+        return false;
+    }
 
     [Header("Health")]
     public int maxHits = 3;
@@ -65,9 +103,6 @@ public class Enemy : Entity, IDamagable
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         col = GetComponent<Collider2D>();
         defaultGravityScale = rb.gravityScale;
-        // How far below this transform's own origin the collider's bottom
-        // edge sits - position-independent, so it stays correct no matter
-        // where the enemy is later moved (e.g. by the spawner).
         feetOffset = col != null ? transform.position.y - col.bounds.min.y : 0f;
 
         GameObject playerObj = GameObject.FindWithTag("Player");
@@ -78,8 +113,6 @@ public class Enemy : Entity, IDamagable
         }
 
         idleState = new Enemy_IdleState(this, stateMachine, "idle");
-        // Move/Battle/Jump all share the "run" Animator bool - Enemy_AC only
-        // has idle/run/attack states, no dedicated move or battle animation.
         moveState = new Enemy_MoveState(this, stateMachine, "run");
         battleState = new Enemy_BattleState(this, stateMachine, "run");
         attackState = new Enemy_AttackState(this, stateMachine, "attack");
@@ -93,42 +126,15 @@ public class Enemy : Entity, IDamagable
         stateMachine.Initialize(canIdle ? idleState : moveState);
     }
 
-    // While frozen (boss-gate timeline), stop AI/collision updates and physics
-    // entirely - animation keeps whatever state it was already in.
-    protected override void Update()
-    {
-        if (frozen)
-            return;
-
-        base.Update();
-    }
-
-    public void SetFrozen(bool value)
-    {
-        if (frozen == value)
-            return;
-
-        frozen = value;
-
-        if (rb != null)
-        {
-            if (value)
-                SetVelocity(0f, 0f);
-
-            rb.simulated = !value;
-        }
-    }
-
     public float GetFeetOffset() => feetOffset;
 
     public float GetHorizontalDistanceToPlayer() => player == null ? float.MaxValue : Mathf.Abs(player.position.x - transform.position.x);
 
-    // Positive = player is above the enemy.
     public float GetVerticalDistanceToPlayer() => player == null ? 0f : player.position.y - transform.position.y;
 
     public bool IsPlayerDead() => playerScript != null && playerScript.IsDead;
 
-    public bool PlayerInRange() => player != null && !IsPlayerDead() && Vector2.Distance(transform.position, player.position) <= detectionRange;
+    public bool PlayerInRange() => player != null && !IsPlayerDead() && GetHorizontalDistanceToPlayer() <= detectionRange;
 
     public void EnterBattleState()
     {
@@ -174,9 +180,6 @@ public class Enemy : Entity, IDamagable
         }
     }
 
-    // Called on every other active enemy the instant the boss dies - they all
-    // go down and score with her, per the "beat Shadya = everyone else with
-    // her dies too" design.
     public void KillForBossVictory()
     {
         if (stateMachine.currentState == deadState)
@@ -186,9 +189,6 @@ public class Enemy : Entity, IDamagable
         ScoreManager.Instance?.RegisterEnemyDefeated();
     }
 
-    // Called by a fall-death trigger - walked/knocked off the level entirely.
-    // No death animation to play (it's already falling), so this skips
-    // straight to scoring and pooling instead of going through deadState.
     public void FallOut()
     {
         if (stateMachine.currentState == deadState)
@@ -201,7 +201,7 @@ public class Enemy : Entity, IDamagable
 
     public override void PerformAttack()
     {
-        if (player == null || IsPlayerDead())
+        if (AttacksDisabled || player == null || IsPlayerDead())
             return;
 
         if (GetHorizontalDistanceToPlayer() <= attackRange && Mathf.Abs(GetVerticalDistanceToPlayer()) <= jumpTriggerHeight)
@@ -220,11 +220,36 @@ public class Enemy : Entity, IDamagable
 
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, attackRange);
+
+        DrawJumpArcGizmo(1);
+        DrawJumpArcGizmo(-1);
     }
 
-    // Called by EnemySpawner right after pulling this instance out of the
-    // pool - hides it (invisible, no physics, no collision) while the brush
-    // draw-in plays, before FinishSpawn() actually turns it loose.
+    private void DrawJumpArcGizmo(int direction)
+    {
+        if (rb == null)
+            return;
+
+        float gravity = Physics2D.gravity.y * rb.gravityScale;
+
+        if (gravity >= 0f)
+            return;
+
+        Gizmos.color = Color.yellow;
+        Vector3 previous = transform.position;
+
+        for (int i = 1; i <= landingCheckSamples; i++)
+        {
+            float t = landingCheckMaxTime * i / landingCheckSamples;
+            float x = battleMoveSpeed * direction * t;
+            float y = jumpForce * t + 0.5f * gravity * t * t;
+
+            Vector3 point = transform.position + new Vector3(x, y, 0f);
+            Gizmos.DrawLine(previous, point);
+            previous = point;
+        }
+    }
+
     public void PrepareForDraw()
     {
         SetSpriteAlpha(0f);
@@ -235,7 +260,6 @@ public class Enemy : Entity, IDamagable
         rb.simulated = false;
     }
 
-    // Called every frame of the brush stroke, t going 0 -> 1.
     public void SetDrawProgress(float t) => SetSpriteAlpha(t);
 
     private void SetSpriteAlpha(float alpha)
@@ -248,9 +272,6 @@ public class Enemy : Entity, IDamagable
         spriteRenderer.color = color;
     }
 
-    // Called once the brush stroke finishes - resets everything the previous
-    // life (or Enemy_DeadState) may have left disabled/altered, and puts the
-    // enemy back into a fresh idle state.
     public void FinishSpawn(EnemyPool pool)
     {
         sourcePool = pool;

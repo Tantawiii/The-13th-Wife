@@ -17,8 +17,8 @@ public class Player : Entity, ISaveable, IDamagable
     [Header("Attack")]
     [SerializeField] private Transform attackPoint;
     [SerializeField] private float attackRadius = 0.5f;
-    // Fallback so the state can always self-exit even before an Attack
-    // animation/Animation Event exists (triggerCalled is still preferred once it does).
+    [Tooltip("Spawned at each enemy hit's position - the prefab's own VFX_AutoController handles its offset/rotation/destroy.")]
+    [SerializeField] private GameObject hitVFX;
     public float attackDuration = 0.4f;
 
     [Header("Health")]
@@ -27,8 +27,6 @@ public class Player : Entity, ISaveable, IDamagable
     private int hitsTaken;
     public int HitsTaken => hitsTaken;
 
-    // Fired whenever hitsTaken or maxHits changes - lets UI_HealthDisplay
-    // refresh reactively instead of polling every frame.
     public event System.Action OnHealthChanged;
 
     [SerializeField] private UI_LevelLose levelLoseUI;
@@ -51,8 +49,6 @@ public class Player : Entity, ISaveable, IDamagable
 
         defaultGravityScale = rb.gravityScale;
 
-        // Restore any rebind overrides saved from a previous session before
-        // anything below reads the (possibly now-different) bindings.
         RebindSaveLoad.Load(inputActions);
 
         InputActionMap playerMap = inputActions.FindActionMap("Player");
@@ -91,7 +87,14 @@ public class Player : Entity, ISaveable, IDamagable
         foreach (Collider2D hit in hits)
         {
             IDamagable damagable = hit.GetComponent<IDamagable>();
-            damagable?.TakeHit(transform);
+
+            if (damagable == null)
+                continue;
+
+            damagable.TakeHit(transform);
+
+            if (hitVFX != null)
+                Instantiate(hitVFX, hit.transform.position, Quaternion.identity);
         }
     }
 
@@ -119,8 +122,6 @@ public class Player : Entity, ISaveable, IDamagable
             Die();
     }
 
-    // Called by an Enemy's death roll - a chance-based reward for fighting
-    // through, capped so the fight never becomes trivial.
     public void GrantBonusLife()
     {
         if (maxHits >= MaxPossibleHits)
@@ -150,6 +151,5 @@ public class Player : Entity, ISaveable, IDamagable
 
     public void SaveData(ref GameData data)
     {
-        // Checkpoint.SaveData already owns writing lastCheckpointPosition.
     }
 }

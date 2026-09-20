@@ -1,14 +1,12 @@
 using System;
+using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UI;
 
-// One instance per rebindable binding - e.g. Jump gets two of these (one for
-// its Keyboard&Mouse binding, one for its Gamepad binding); a Move WASD part
-// gets exactly one (Keyboard&Mouse only - the gamepad side is a single
-// whole-stick binding with its own separate row/instance).
 public class RebindBinding : MonoBehaviour
 {
     [SerializeField] private InputActionAsset inputActions;
@@ -52,10 +50,6 @@ public class RebindBinding : MonoBehaviour
             .OnCancel(_ => FinishRebind(action))
             .OnComplete(_ => FinishRebind(action));
 
-        // Restrict which device's input is actually accepted while capturing -
-        // WithBindingGroup only picks which binding slot gets overridden, it
-        // doesn't stop e.g. a keyboard press from being captured while
-        // rebinding a Gamepad row (and vice versa).
         if (bindingGroup == "Gamepad")
         {
             operation = operation.WithControlsHavingToMatchPath("<Gamepad>");
@@ -101,7 +95,36 @@ public class RebindBinding : MonoBehaviour
 
         InputAction action = ResolveAction();
         int bindingIndex = FindBindingIndex(action);
-        bindingText.text = bindingIndex >= 0 ? action.GetBindingDisplayString(bindingIndex) : "-";
+        bindingText.text = bindingIndex >= 0 ? GetDisplayName(action, bindingIndex) : "-";
+    }
+
+    private static string GetDisplayName(InputAction action, int bindingIndex)
+    {
+        InputBinding binding = action.bindings[bindingIndex];
+        InputControl control = !string.IsNullOrEmpty(binding.effectivePath) ? InputSystem.FindControl(binding.effectivePath) : null;
+
+        return control is KeyControl ? NicifyControlName(control.name) : action.GetBindingDisplayString(bindingIndex);
+    }
+
+    private static string NicifyControlName(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+            return name;
+
+        StringBuilder sb = new StringBuilder();
+        sb.Append(char.ToUpperInvariant(name[0]));
+
+        for (int i = 1; i < name.Length; i++)
+        {
+            char c = name[i];
+
+            if (char.IsUpper(c))
+                sb.Append(' ');
+
+            sb.Append(c);
+        }
+
+        return sb.ToString();
     }
 
     private InputAction ResolveAction()

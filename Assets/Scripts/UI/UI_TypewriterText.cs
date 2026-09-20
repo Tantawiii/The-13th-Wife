@@ -2,8 +2,6 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 
-// Reusable char-by-char dialogue overlay - fades in, types the message out,
-// holds, fades out. Used for the level-intro line and the boss-gate line.
 public class UI_TypewriterText : MonoBehaviour
 {
     [SerializeField] private CanvasGroup group;
@@ -23,6 +21,18 @@ public class UI_TypewriterText : MonoBehaviour
         activeRoutine = StartCoroutine(PlayCo(message, onComplete));
     }
 
+    public void FadeOutImmediately(float duration)
+    {
+        if (activeRoutine != null)
+        {
+            StopCoroutine(activeRoutine);
+            activeRoutine = null;
+        }
+
+        if (group != null && group.alpha > 0f)
+            StartCoroutine(Fade(group.alpha, 0f, duration));
+    }
+
     private IEnumerator PlayCo(string message, System.Action onComplete)
     {
         if (text != null)
@@ -35,16 +45,28 @@ public class UI_TypewriterText : MonoBehaviour
             foreach (char c in message)
             {
                 text.text += c;
-                yield return new WaitForSeconds(secondsPerCharacter);
+                yield return WaitSeconds(secondsPerCharacter);
             }
         }
 
-        yield return new WaitForSeconds(holdDuration);
+        yield return WaitSeconds(holdDuration);
 
         yield return Fade(1f, 0f, fadeOutDuration);
 
         activeRoutine = null;
         onComplete?.Invoke();
+    }
+
+    private IEnumerator WaitSeconds(float duration)
+    {
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            if (!UI_Pause.IsPaused)
+                elapsed += Time.deltaTime;
+
+            yield return null;
+        }
     }
 
     private IEnumerator Fade(float from, float to, float duration)
@@ -55,8 +77,12 @@ public class UI_TypewriterText : MonoBehaviour
         float elapsed = 0f;
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
-            group.alpha = Mathf.Lerp(from, to, Mathf.Clamp01(elapsed / duration));
+            if (!UI_Pause.IsPaused)
+            {
+                elapsed += Time.deltaTime;
+                group.alpha = Mathf.Lerp(from, to, Mathf.Clamp01(elapsed / duration));
+            }
+
             yield return null;
         }
 

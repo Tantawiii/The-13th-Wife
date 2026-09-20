@@ -2,9 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-// Dictionary<TKey,TValue> isn't natively serializable by Unity - this flattens
-// to parallel lists before serialize and rebuilds the dictionary after, so the
-// rest of the codebase can use it exactly like a normal Dictionary.
 [Serializable]
 public class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver
 {

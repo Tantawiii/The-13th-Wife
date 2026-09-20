@@ -2,8 +2,6 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 
-// Generic brief on-screen message: fades in, holds, fades out. Used for the
-// "+1 Life" bonus-life callout, reusable for anything similar later.
 public class UI_FloatingPopup : MonoBehaviour
 {
     [SerializeField] private CanvasGroup group;

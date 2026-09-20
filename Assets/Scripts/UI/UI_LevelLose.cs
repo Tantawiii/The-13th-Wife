@@ -4,16 +4,18 @@ using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-// Shown on Player death. Time.timeScale is left alone on purpose - unlike the
-// Pause menu, the level keeps running behind this screen.
 public class UI_LevelLose : MonoBehaviour
 {
     [SerializeField] private UI_FadeScreen fadeScreen;
     [SerializeField] private float fadeDuration = 1f;
+    [SerializeField] private UI_Curtain curtain;
 
-    [Tooltip("HUD elements (health hearts, score) to fade out alongside the screen fade, so they don't sit on top of it.")]
+    [Tooltip("HUD elements (health hearts, score, profile background) to fade out alongside the screen fade, so they don't sit on top of it.")]
     [SerializeField] private CanvasGroup healthGroup;
     [SerializeField] private CanvasGroup scoreGroup;
+    [SerializeField] private CanvasGroup profileGroup;
+    [Tooltip("The dialogue overlay - if a line is still showing when the player dies, it fades out with everything else instead of sitting on top of the lose screen.")]
+    [SerializeField] private UI_TypewriterText dialogue;
 
     [SerializeField] private GameObject loseTextObject;
     [SerializeField] private CanvasGroup loseTextGroup;
@@ -32,7 +34,8 @@ public class UI_LevelLose : MonoBehaviour
 
     private IEnumerator ShowLoseScreenCo()
     {
-        StartCoroutine(FadeOutHudCo(fadeDuration));
+        StartCoroutine(HudFader.FadeOut(fadeDuration, healthGroup, scoreGroup, profileGroup));
+        dialogue?.FadeOutImmediately(fadeDuration);
 
         if (fadeScreen != null)
             yield return fadeScreen.FadeToBlack(fadeDuration);
@@ -80,44 +83,32 @@ public class UI_LevelLose : MonoBehaviour
             EventSystem.current.SetSelectedGameObject(retryButton.gameObject);
     }
 
-    private IEnumerator FadeOutHudCo(float duration)
-    {
-        float elapsed = 0f;
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            float alpha = 1f - Mathf.Clamp01(elapsed / duration);
-
-            if (healthGroup != null)
-                healthGroup.alpha = alpha;
-            if (scoreGroup != null)
-                scoreGroup.alpha = alpha;
-
-            yield return null;
-        }
-
-        if (healthGroup != null)
-            healthGroup.alpha = 0f;
-        if (scoreGroup != null)
-            scoreGroup.alpha = 0f;
-    }
-
-    // Wired to Retry_BTN - restarts from whatever checkpoint was reached this
-    // session (saved here so it survives the reload), or the level's own
-    // default spawn if none was ever reached.
     public void Retry()
     {
+        StartCoroutine(RetryCo());
+    }
+
+    private IEnumerator RetryCo()
+    {
+        if (curtain != null)
+            yield return curtain.PlayClose();
+
         if (SaveManager.Instance != null)
             SaveManager.Instance.SaveGame();
 
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
-    // Wired to MainMenu_BTN - same checkpoint-or-level save as Retry, then
-    // back to the Main Menu instead of reloading here. Screen is already
-    // fully covered from ShowLoseScreenCo, so no fade needed before the load.
     public void SaveAndReturnToMenu()
     {
+        StartCoroutine(SaveAndReturnToMenuCo());
+    }
+
+    private IEnumerator SaveAndReturnToMenuCo()
+    {
+        if (curtain != null)
+            yield return curtain.PlayClose();
+
         if (SaveManager.Instance != null)
             SaveManager.Instance.SaveGame();
 

@@ -1,8 +1,6 @@
 using TMPro;
 using UnityEngine;
 
-// Minimal always-on HUD readout for ScoreManager - swap/restyle freely once
-// real UI art exists.
 public class UI_ScoreDisplay : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI text;

@@ -1,9 +1,5 @@
 using UnityEngine;
 
-// Not entered from player input - Run is the default grounded movement.
-// This state is only reachable via an external call to
-// stateMachine.ChangeState(player.walkState), e.g. from a Timeline signal
-// or cutscene script that needs slower, scripted movement.
 public class Player_WalkState : Player_GroundedState
 {
     public Player_WalkState(Player player, StateMachine stateMachine, string animBoolName) : base(player, stateMachine, animBoolName)
